@@ -1,3 +1,11 @@
+//--------------------------------------------------------------------------------------
+// Gaming In Go Tutorial
+//
+// Following along with this series: https://www.youtube.com/watch?v=5HCdqV4nQkQ
+//
+// Use the composition/component pattern and the SDL2 libraries to make a basic game.
+//
+//--------------------------------------------------------------------------------------
 package main
 
 import (
@@ -30,4 +38,17 @@ func main() {
 	}
 	defer window.Destroy() // when main ends, clean up the window
 
+	// make a renderer to draw our sprites to screen using hardware acceleration
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	if err != nil {
+		fmt.Println("Attempting sdl.createRenderer: ", err)
+		return
+	}
+	defer renderer.Destroy() // SDL uses c and needs plenty of memory cleanup
+	renderer.SetDrawColor(0, 155, 0, 255)
+	for {
+		// Our game loop
+		renderer.Clear()
+		renderer.Present()
+	}
 }
