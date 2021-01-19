@@ -45,10 +45,35 @@ func main() {
 		return
 	}
 	defer renderer.Destroy() // SDL uses c and needs plenty of memory cleanup
-	renderer.SetDrawColor(0, 155, 0, 255)
+	bgColor := sdl.Color{R: 0, G: 155, B: 0, A: 255}
+	renderer.SetDrawColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A)
+
+	img, err := sdl.LoadBMP("sprites/player.bmp")
+	if err != nil {
+		fmt.Println("Attempted Sdl.LoadBmp:", err)
+		return
+	}
+
+	playerTex, err := renderer.CreateTextureFromSurface(img)
+
+	if err != nil {
+		fmt.Println("Attempted texture from surface:", err)
+		return
+	}
+
 	for {
-		// Our game loop
-		renderer.Clear()
-		renderer.Present()
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				return
+			}
+			// Our game loop
+			renderer.Clear()
+
+			renderer.Copy(playerTex,
+				&sdl.Rect{X: 0, Y: 0, W: 105, H: 105},
+				&sdl.Rect{X: 100, Y: 100, W: 105, H: 105})
+			renderer.Present()
+		}
 	}
 }
