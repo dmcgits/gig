@@ -19,49 +19,29 @@ const (
 	screenHeight = 800
 )
 
-func main() {
-	// SDL, an external simple media library, needs initialization.
-	err := sdl.Init(sdl.INIT_EVERYTHING)
-	if err != nil {
-		fmt.Println("Attempting sdl.INIT_EVERYTHING: ", err)
-		return
-	}
-	// Ask SDL to create and show us a window
-	window, err := sdl.CreateWindow(
-		"GIG follow along!",
-		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, // location
-		screenWidth, screenHeight,
-		sdl.WINDOW_OPENGL)
-	if err != nil {
-		fmt.Println("Attempted sdl.CreateWindow: ", err)
-		return
-	}
-	defer window.Destroy() // when main ends, clean up the window
+var (
+	renderer *sdl.Renderer
+	window   *sdl.Window
+)
 
-	// make a renderer to draw our sprites to screen using hardware acceleration
-	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
-	if err != nil {
-		fmt.Println("Attempting sdl.createRenderer: ", err)
-		return
-	}
-	defer renderer.Destroy() // SDL uses c and needs plenty of memory cleanup
+func main() {
+	createWindowAndRenderer() // Updates the renderer and window globals.
+	defer window.Destroy()    // when main ends, clean up the window
+	defer renderer.Destroy()  // SDL uses c and needs plenty of memory cleanup
+
+	playGame()
+}
+
+func playGame() {
 	bgColor := sdl.Color{R: 0, G: 155, B: 0, A: 255}
 	renderer.SetDrawColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A)
-
-	img, err := sdl.LoadBMP("sprites/player.bmp")
+	// INTERACTION LOOP
+	playerTex, err := loadTexture("sprites/player.bmp")
 	if err != nil {
-		fmt.Println("Attempted Sdl.LoadBmp:", err)
-		return
+		panic("sprites are missing.")
 	}
-
-	playerTex, err := renderer.CreateTextureFromSurface(img)
-
-	if err != nil {
-		fmt.Println("Attempted texture from surface:", err)
-		return
-	}
-
-	for {
+	quit := false
+	for !quit {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
 			case *sdl.QuitEvent:
@@ -76,4 +56,48 @@ func main() {
 			renderer.Present()
 		}
 	}
+}
+
+// Use SDL2 to generate the game window and renderer.
+// Dimensions are in screenWidth, screenHeight constants.
+func createWindowAndRenderer() {
+	// SDL, an external simple media library, needs initialization.
+	err := sdl.Init(sdl.INIT_EVERYTHING)
+	if err != nil {
+		fmt.Println("Attempting sdl.INIT_EVERYTHING: ", err)
+		return
+	}
+	// Ask SDL to create and show us a window
+	window, err = sdl.CreateWindow(
+		"GIG follow along!",
+		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, // location
+		screenWidth, screenHeight,
+		sdl.WINDOW_OPENGL)
+	if err != nil {
+		fmt.Println("Attempted sdl.CreateWindow: ", err)
+		return
+	}
+
+	// make a renderer to draw our sprites to screen using hardware acceleration
+	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	if err != nil {
+		fmt.Println("Attempting sdl.createRenderer: ", err)
+		return
+	}
+}
+
+func loadTexture(fileAndPath string) (*sdl.Texture, error) {
+
+	img, err := sdl.LoadBMP("sprites/player.bmp")
+	if err != nil {
+		fmt.Println("Attempted Sdl.LoadBmp:", err)
+		return nil, err
+	}
+
+	playerTex, err := renderer.CreateTextureFromSurface(img)
+	if err != nil {
+		fmt.Println("Attempted texture from surface:", err)
+		return nil, err
+	}
+	return playerTex, nil
 }
